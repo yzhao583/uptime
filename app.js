@@ -2,23 +2,23 @@
  * Monitor remote server uptime.
  */
 
-var http       = require('http');
-var url        = require('url');
-var express    = require('express');
-var config     = require('config');
-var socketIo   = require('socket.io');
-var fs         = require('fs');
-var monitor    = require('./lib/monitor');
-var analyzer   = require('./lib/analyzer');
+var http = require('http');
+var url = require('url');
+var express = require('express');
+var config = require('config');
+var socketIo = require('socket.io');
+var fs = require('fs');
+var monitor = require('./lib/monitor');
+var analyzer = require('./lib/analyzer');
 var CheckEvent = require('./models/checkEvent');
-var Ping       = require('./models/ping');
+var Ping = require('./models/ping');
 var PollerCollection = require('./lib/pollers/pollerCollection');
-var apiApp     = require('./app/api/app');
+var apiApp = require('./app/api/app');
 var dashboardApp = require('./app/dashboard/app');
 
 // database
 
-var mongoose   = require('./bootstrap');
+var mongoose = require('./bootstrap');
 
 var a = analyzer.createAnalyzer(config.analyzer);
 a.start();
@@ -28,7 +28,7 @@ a.start();
 var app = module.exports = express();
 var server = http.createServer(app);
 
-app.configure(function(){
+app.configure(function() {
   app.use(app.router);
   // the following middlewares are only necessary for the mounted 'dashboard' app, 
   // but express needs it on the parent app (?) and it therefore pollutes the api
@@ -36,10 +36,12 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(express.cookieParser('Z5V45V6B5U56B7J5N67J5VTH345GC4G5V4'));
   app.use(express.cookieSession({
-    key:    'uptime',
+    key: 'uptime',
     secret: 'FZ5HEE5YHD3E566756234C45BY4DSFZ4',
-    proxy:  true,
-    cookie: { maxAge: 60 * 60 * 1000 }
+    proxy: true,
+    cookie: {
+      maxAge: 60 * 60 * 1000
+    }
   }));
   app.set('pollerCollection', new PollerCollection());
 });
@@ -50,12 +52,12 @@ config.plugins.forEach(function(pluginName) {
   if (typeof plugin.initWebApp !== 'function') return;
   console.log('loading plugin %s on app', pluginName);
   plugin.initWebApp({
-    app:       app,
-    api:       apiApp,       // mounted into app, but required for events
+    app: app,
+    api: apiApp, // mounted into app, but required for events
     dashboard: dashboardApp, // mounted into app, but required for events
-    io:        io,
-    config:    config,
-    mongoose:  mongoose
+    io: io,
+    config: config,
+    mongoose: mongoose
   });
 });
 
@@ -64,12 +66,17 @@ app.emit('beforeFirstRoute', app, apiApp);
 app.configure('development', function() {
   if (config.verbose) mongoose.set('debug', true);
   app.use(express.static(__dirname + '/public'));
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+  app.use(express.errorHandler({
+    dumpExceptions: true,
+    showStack: true
+  }));
 });
 
 app.configure('production', function() {
   var oneYear = 31557600000;
-  app.use(express.static(__dirname + '/public', { maxAge: oneYear }));
+  app.use(express.static(__dirname + '/public', {
+    maxAge: oneYear
+  }));
   app.use(express.errorHandler());
 });
 
@@ -125,12 +132,12 @@ fs.exists('./plugins/index.js', function(exists) {
     var initFunction = pluginIndex.init || pluginIndex.initWebApp;
     if (typeof initFunction === 'function') {
       initFunction({
-        app:       app,
-        api:       apiApp,       // mounted into app, but required for events
+        app: app,
+        api: apiApp, // mounted into app, but required for events
         dashboard: dashboardApp, // mounted into app, but required for events
-        io:        io,
-        config:    config,
-        mongoose:  mongoose
+        io: io,
+        config: config,
+        mongoose: mongoose
       });
     }
   }
@@ -146,7 +153,8 @@ if (!module.parent) {
   if (config.server && config.server.port) {
     console.error('Warning: The server port setting is deprecated, please use the url setting instead');
     port = config.server.port;
-  } else {
+  }
+  else {
     port = serverUrl.port;
     if (port === null) {
       port = 80;
@@ -154,7 +162,7 @@ if (!module.parent) {
   }
   var port = process.env.PORT || port;
   var host = process.env.HOST || serverUrl.hostname;
-  server.listen(port, function(){
+  server.listen(port, function() {
     console.log("Express server listening on host %s, port %d in %s mode", host, port, app.settings.env);
   });
   server.on('error', function(e) {
